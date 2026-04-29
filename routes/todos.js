@@ -1,8 +1,10 @@
-const express = require("express");
-const router = express.Router();
-const Todo = require("../models/Todo");
+import express from "express";
+import Todo from "../models/Todo.js";
+import AppError from "../utils/AppError.js";
 
-router.get("/", async (req, res) => {
+const router = express.Router();
+
+router.get("/", async (req, res, next) => {
   // if (req.query.completed !== undefined) {
   //   const isCompleted = req.query.completed === "true";
   //   result = result.filter((t) => t.completed === isCompleted);
@@ -19,17 +21,17 @@ router.get("/", async (req, res) => {
 
   try {
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 });
 
 router.get("/:id", async (req, res) => {
   try {
     const todo = await Todo.findById(req?.params?.id);
-    if (!todo) return res.status(404).json({ message: "Todo not found" });
+    if (!todo) return next(new AppError("Todo not found", 404));
     res.json({ message: "Todo is fetch successfully", data: todo });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 });
 
@@ -42,30 +44,30 @@ router.post("/", async (req, res) => {
 
     res.status(201).json({ message: "Todo is created successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 });
 
 router.put("/:id", async (req, res) => {
   try {
     const todo = await Todo.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
+      new: true, runValidators: true
     });
-    if (!todo) return res.status(404).json({ message: "Todo not found" });
+    if (!todo) return next(new AppError("Todo not found", 404));
     res.json({ message: "Todo is updated successfully", data: todo });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 });
 
 router.delete("/:id", async (req, res) => {
   try {
     const todo = await Todo.findByIdAndDelete(req.params.id);
-    if (!todo) return res.status(404).json({ message: "Todo not found" });
+    if (!todo) return next(new AppError("Todo not found", 404));
     res.json({ message: "Todo is deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,7 +1,8 @@
-const express = require("express");
-const todoRoutes = require("./routes/todos");
-const mongoose = require("mongoose");
-require("dotenv").config();
+import express from "express";
+import mongoose from "mongoose";
+import todoRoutes from "./routes/todos.js";
+import errorHandler from "./middleware/errorHandler.js";
+import "dotenv/config";
 
 const app = express();
 app.use(express.json());
@@ -18,10 +19,7 @@ mongoose
 
 app.use("/todos", todoRoutes);
 
-app.use((err, req, res, next) => {
-  console.error(err.message);
-  res.status(500).json({ message: "Something went wrong" });
-});
+app.use(errorHandler)
 
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);
