@@ -7,9 +7,12 @@ import "dotenv/config";
 
 const app = express();
 
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://192.168.2.83:5173']
-}))
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL.split(","),
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 
@@ -24,7 +27,7 @@ mongoose
   .catch((err) => console.log("MongoDB connection error:", err));
 
 app.use("/todos", todoRoutes);
-app.use(errorHandler)
+app.use(errorHandler);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);
