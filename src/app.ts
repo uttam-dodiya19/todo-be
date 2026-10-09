@@ -1,21 +1,18 @@
+import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import todoRoutes from "./routes/todos.js";
 import errorHandler from "./middleware/errorHandler.js";
-import "dotenv/config";
+import { config } from "./utils/config.js";
 
 const app = express();
 
-const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
-const mongoUri = process.env.MONGO_URI || "mongodb://localhost:27017/todo";
-const port = process.env.PORT || 5000;
-
 app.use(
   cors({
-    origin: clientUrl.split(","),
+    origin: config.CLIENT_URL,
     credentials: true,
-  })
+  }),
 );
 
 app.use(express.json());
@@ -26,13 +23,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 mongoose
-  .connect(mongoUri)
+  .connect(config.MONGO_URI)
   .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
 app.use("/todos", todoRoutes);
 app.use(errorHandler);
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+app.listen(config.PORT, () => {
+  console.log(`Server running on port ${config.PORT}`);
 });

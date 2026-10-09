@@ -6,7 +6,7 @@ import AppError from "../utils/AppError.js";
 export const getTodos = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const filter: any = {};
@@ -23,16 +23,23 @@ export const getTodos = async (
 
     // Search by title
     if (req.query.search) {
+      const searchTerm = req.query.search as string;
+      const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
       filter.title = {
-        $regex: req.query.search as string,
+        $regex: escaped,
         $options: "i", // Case-insensitive search is standard
       };
     }
 
     const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
+    const limit = Math.min(Number(req.query.limit) || 10, 50);
     const skip = (page - 1) * limit;
-    const sortField = (req.query.sortBy as string) || "createdAt";
+    const sortField = ["createdAt", "title", "priority", "completed"].includes(
+      req.query.sortBy as string,
+    )
+      ? (req.query.sortBy as string)
+      : "createdAt";
     const sortOrder = req.query.order === "asc" ? 1 : -1;
 
     const [todos, total] = await Promise.all([
@@ -59,7 +66,7 @@ export const getTodos = async (
 export const getTodoById = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const todo = await Todo.findById(req.params.id);
@@ -76,7 +83,7 @@ export const getTodoById = async (
 export const createTodo = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { title, priority } = req.body;
@@ -85,7 +92,9 @@ export const createTodo = async (
       priority,
     });
 
-    res.status(201).json({ message: "Todo is created successfully", data: newTodo });
+    res
+      .status(201)
+      .json({ message: "Todo is created successfully", data: newTodo });
   } catch (error) {
     next(error);
   }
@@ -95,7 +104,7 @@ export const createTodo = async (
 export const updateTodo = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const todo = await Todo.findByIdAndUpdate(req.params.id, req.body, {
@@ -115,7 +124,7 @@ export const updateTodo = async (
 export const deleteTodo = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const todo = await Todo.findByIdAndDelete(req.params.id);
