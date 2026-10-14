@@ -5,7 +5,7 @@ const errorHandler = (
   err: any,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): any => {
   // Mongoose ValidationError — missing required field, wrong type etc
   if (err.name === "ValidationError") {
@@ -21,6 +21,22 @@ const errorHandler = (
   // custom AppError — carries its own status code
   if (err instanceof AppError || err.statusCode) {
     return res.status(err.statusCode || 500).json({ message: err.message });
+  }
+  // duplicate email: MongoDB error code 11000 (not a ValidationError!)
+  if (err.code === 11000) {
+    return res.status(409).json({ message: "Email already registered" });
+  }
+
+  // bad or tampered token
+  if (err.name === "JsonWebTokenError") {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+
+  // expired token
+  if (err.name === "TokenExpiredError") {
+    return res
+      .status(401)
+      .json({ message: "Token expired, please login again" });
   }
 
   // fallback — unknown server error

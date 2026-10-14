@@ -3,8 +3,9 @@ import express, { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import todoRoutes from "./routes/todos.js";
-import errorHandler from "./middleware/errorHandler.js";
+import authRoutes from "./routes/auth.js";
 import { config } from "./utils/config.js";
+import errorHandler from "./middleware/errorHandler.js";
 
 const app = express();
 
@@ -27,6 +28,7 @@ mongoose
   .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
+app.use("/auth", authRoutes);
 app.use("/todos", todoRoutes);
 app.use(errorHandler);
 

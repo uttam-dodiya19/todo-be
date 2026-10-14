@@ -4,6 +4,7 @@ export interface ITodo extends Document {
   title: string;
   completed: boolean;
   priority: "low" | "medium" | "high";
+  user: Schema.Types.ObjectId;
 }
 
 const todoSchema = new Schema<ITodo>(
@@ -20,6 +21,7 @@ const todoSchema = new Schema<ITodo>(
       default: "low",
       enum: ["low", "medium", "high"],
     },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true },
 );

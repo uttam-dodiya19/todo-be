@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import Todo from "../models/Todo.js";
 import AppError from "../utils/AppError.js";
 
+const getUserId = (req: Request): any =>
+  (req as Request & { user: { _id: any } }).user._id;
+
 // GET /todos
 export const getTodos = async (
   req: Request,
@@ -9,7 +12,7 @@ export const getTodos = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const filter: any = {};
+    const filter: any = { user: getUserId(req) };
 
     // Filter by completed
     if (req.query.completed !== undefined) {
@@ -58,6 +61,7 @@ export const getTodos = async (
       totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
+    console.log("error", error);
     next(error);
   }
 };
@@ -69,7 +73,10 @@ export const getTodoById = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const todo = await Todo.findById(req.params.id);
+    const todo = await Todo.findOne({
+      _id: req.params.id,
+      user: getUserId(req),
+    });
     if (!todo) {
       return next(new AppError("Todo not found", 404));
     }
@@ -90,6 +97,7 @@ export const createTodo = async (
     const newTodo = await Todo.create({
       title,
       priority,
+      user: getUserId(req), // Associate the todo with the authenticated user
     });
 
     res
@@ -107,10 +115,14 @@ export const updateTodo = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const todo = await Todo.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const todo = await Todo.findOneAndUpdate(
+      { _id: req.params.id, user: getUserId(req) },
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
     if (!todo) {
       return next(new AppError("Todo not found", 404));
     }
@@ -127,7 +139,10 @@ export const deleteTodo = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const todo = await Todo.findByIdAndDelete(req.params.id);
+    const todo = await Todo.findOneAndDelete({
+      _id: req.params.id,
+      user: getUserId(req),
+    });
     if (!todo) {
       return next(new AppError("Todo not found", 404));
     }
